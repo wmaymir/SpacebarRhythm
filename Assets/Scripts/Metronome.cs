@@ -3,7 +3,7 @@ using UnityEngine;
 public class Metronome : MonoBehaviour
 {
     //song info
-    private double _songBPM = 176d;
+    private double _songBPM = 150d;
 
     //song calculations
     private double beatDurationSec; //seconds per quarter beat, or quarter beat duration in seconds
