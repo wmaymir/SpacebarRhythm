@@ -13,7 +13,7 @@ public class Metronome : MonoBehaviour
     private double _currentBeatPos;
     private int _nextBeat; //NOT nextBeatPos
     private int _lastBeat; //NOT lastBeatPos, it means the number lastBeat
-    private float _halfBeatBeforeNextBeat;
+    private float _halfBeat;
     //simply returns lastbeat - 0.5 so that the window is not based off of nextbeat, which changes as soon as it is reached
 
     private int _activeBeat; //defines the widest window that opens and closes on the active beat
@@ -29,11 +29,13 @@ public class Metronome : MonoBehaviour
         _beatDurationMS = 60d / _songBPM * 1000d;
 
         _lastBeat = 0;
-        _halfBeatBeforeNextBeat = 0.5f;
+        _halfBeat = 0.5f;
         _nextBeat = 1;
 
         _activeBeat = -1; //-1 if beat window closed
         _activeBeatMargainSec = 0.100; //Margain becomes a + or -
+        _firstExitPossible = false;
+        _firstEnterPossible = true;
     }
 
     private void OnEnable()
@@ -56,35 +58,30 @@ public class Metronome : MonoBehaviour
         if (_currentBeatPos >= _nextBeat)
         {
             _lastBeat++;
-            _halfBeatBeforeNextBeat++;
+            _halfBeat++;
             _nextBeat++;
 
             //***********************emit or send event ("beat", lastbeat)
-            Debug.Log("LAST BEAT: " + _lastBeat);
+            //Debug.Log("LAST BEAT: " + _lastBeat);
         }
 
         //used for giving beats a marginal property
-        _activeBeatStartPos = _nextBeat - _activeBeatMargainSec;
-        _activeBeatEndPos = _nextBeat + _activeBeatMargainSec;
+        _activeBeatStartPos = _halfBeat - _activeBeatMargainSec;
+        _activeBeatEndPos = _halfBeat + _activeBeatMargainSec;
 
-        if (_currentBeatPos >= _activeBeatStartPos && _currentBeatPos <= _activeBeatEndPos)
+        if (_currentBeatPos >= _activeBeatStartPos && _currentBeatPos <= _activeBeatEndPos && _firstEnterPossible)
         {
-            if (_firstEnterPossible)
-            {
-                _firstEnterPossible = false;
-                _firstExitPossible = true;
-                //**************************must emit enter beat X
-                Debug.Log("ENTER BEAT: " + _activeBeatStartPos);
-            }
-
-            Debug.Log("BEAT WINDOW: " + _activeBeatStartPos);
+            _firstEnterPossible = false;
+            _firstExitPossible = true;
+            //**************************must emit enter beat X
+            //Debug.Log("ENTER BEAT: " + _lastBeat);
         }
-        else if (_firstExitPossible)
+        else if (_currentBeatPos < _activeBeatStartPos && _firstExitPossible || _currentBeatPos > _activeBeatEndPos && _firstExitPossible)
         {
             _firstEnterPossible = true;
             _firstExitPossible = false;
-            //**************************must emit exit beat X
-            Debug.Log("EXIT BEAT: " + _activeBeatStartPos);
+            //**************************must emit enter beat X
+            //Debug.Log("EXIT BEAT: " + _lastBeat);
         }
         else
         {
