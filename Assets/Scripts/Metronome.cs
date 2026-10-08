@@ -5,19 +5,20 @@ using UnityEngine.Rendering;
 public class Metronome : MonoBehaviour
 {
     //song info
+    [SerializeField]
     private double _songBPM = 150d;
 
     //song calculations
+    private double _songAdjustedBPM;
+
     private double _beatDurationSec; //seconds per quarter beat, or quarter beat duration in seconds
-    private double _beatDurationMS; //MS per quarter beat
 
     private double _currentBeatPos;
     private int _nextBeat; //NOT nextBeatPos
     private int _lastBeat; //NOT lastBeatPos, it means the number lastBeat
-    private float _halfBeat;
-    //simply returns lastbeat - 0.5 so that the window is not based off of nextbeat, which changes as soon as it is reached
+    private float _halfBeat; //simply returns 0.5 (lastbeat + 0.5) so that the window is not based off of nextbeat, which changes as soon as it is reached
 
-    private int _activeBeat; //defines the widest window that opens and closes on the active beat
+    //creates the widest window that opens and closes on the active beat
     private double _activeBeatMargainSec;
     private double _activeBeatStartPos;
     private double _activeBeatEndPos;
@@ -34,15 +35,22 @@ public class Metronome : MonoBehaviour
 
     private void Awake()
     {
-        _beatDurationSec = 60d / _songBPM;
-        _beatDurationMS = 60d / _songBPM * 1000d;
+        //keeps the game from breaking from this:
+        //if BPM is at or above 300bpm with an _activeBeatMargainSec of .200 (relation of * 1500), the game will break because the 
+        //margain becomes longer than a beat itself. To avoid this, proper downscaling should be implimented
+        _songAdjustedBPM = _songBPM;
+        while (_songAdjustedBPM >= _activeBeatMargainSec * 1500)
+        {
+            _songAdjustedBPM /= 2;
+        }
+        _beatDurationSec = 60d / _songAdjustedBPM;
 
         _lastBeat = 0;
         _halfBeat = 0.5f;
         _nextBeat = 1;
 
-        _activeBeat = -1; //-1 if beat window closed
-        _activeBeatMargainSec = 0.100; //Margain becomes a + or -
+        //the active beat window
+        _activeBeatMargainSec = 0.200; //Margain becomes a + or -
         _firstExitPossible = false;
         _firstEnterPossible = true;
 
@@ -66,6 +74,7 @@ public class Metronome : MonoBehaviour
         _currentBeatPos = songPosInSeconds / _beatDurationSec;
 
         //used for couting beats
+        //
         if (_currentBeatPos >= _nextBeat)
         {
             _lastBeat++;
@@ -80,6 +89,7 @@ public class Metronome : MonoBehaviour
         _activeBeatStartPos = _halfBeat - _activeBeatMargainSec;
         _activeBeatEndPos = _halfBeat + _activeBeatMargainSec;
 
+        //beat windows opening and closing
         if (_currentBeatPos >= _activeBeatStartPos && _currentBeatPos <= _activeBeatEndPos && _firstEnterPossible)
         {
             _firstEnterPossible = false;
