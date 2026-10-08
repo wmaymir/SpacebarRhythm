@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -23,6 +24,14 @@ public class Metronome : MonoBehaviour
     private bool _firstExitPossible;
     private bool _firstEnterPossible;
 
+    //things emmitted for other components
+    public static event Action<string> OnBeatEntry;
+    private string _onBeatEntryText;
+    public static event Action<string> OnBeatExit;
+    private string _onBeatExitText;
+    public static event Action<string> OnBeatUnavailable;
+    private string _onBeatUnavailableText;
+
     private void Awake()
     {
         _beatDurationSec = 60d / _songBPM;
@@ -36,6 +45,8 @@ public class Metronome : MonoBehaviour
         _activeBeatMargainSec = 0.100; //Margain becomes a + or -
         _firstExitPossible = false;
         _firstEnterPossible = true;
+
+        _onBeatUnavailableText = "No beat";
     }
 
     private void OnEnable()
@@ -73,19 +84,24 @@ public class Metronome : MonoBehaviour
         {
             _firstEnterPossible = false;
             _firstExitPossible = true;
-            //**************************must emit enter beat X
-            //Debug.Log("ENTER BEAT: " + _lastBeat);
+
+            _onBeatEntryText = "Enter beat " + _lastBeat;
+            OnBeatEntry?.Invoke(_onBeatEntryText);
+            Debug.Log(_onBeatEntryText);
         }
         else if (_currentBeatPos < _activeBeatStartPos && _firstExitPossible || _currentBeatPos > _activeBeatEndPos && _firstExitPossible)
         {
             _firstEnterPossible = true;
             _firstExitPossible = false;
-            //**************************must emit enter beat X
-            //Debug.Log("EXIT BEAT: " + _lastBeat);
+
+            _onBeatExitText = "Exit beat " + _lastBeat;
+            OnBeatExit?.Invoke(_onBeatExitText);
+            Debug.Log(_onBeatExitText);
         }
         else
         {
-            //**************************must emit -1
+            OnBeatUnavailable?.Invoke(_onBeatUnavailableText);
+            Debug.Log(_onBeatUnavailableText);
         }
     }
 }
