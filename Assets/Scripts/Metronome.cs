@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class Metronome : MonoBehaviour
 {
@@ -6,54 +7,88 @@ public class Metronome : MonoBehaviour
     private double _songBPM = 150d;
 
     //song calculations
-    private double beatDurationSec; //seconds per quarter beat, or quarter beat duration in seconds
-    private double beatDurationMillisec; //MS per quarter beat
+    private double _beatDurationSec; //seconds per quarter beat, or quarter beat duration in seconds
+    private double _beatDurationMS; //MS per quarter beat
 
     private double _currentBeatPos;
     private int _nextBeat; //NOT nextBeatPos
     private int _lastBeat; //NOT lastBeatPos, it means the number lastBeat
+    private float _halfBeatBeforeNextBeat;
+    //simply returns lastbeat - 0.5 so that the window is not based off of nextbeat, which changes as soon as it is reached
+
+    private int _activeBeat; //defines the widest window that opens and closes on the active beat
+    private double _activeBeatMargainSec;
+    private double _activeBeatStartPos;
+    private double _activeBeatEndPos;
+    private bool _firstExitPossible;
+    private bool _firstEnterPossible;
 
     private void Awake()
     {
-        beatDurationSec = 60 / _songBPM;
-        beatDurationMillisec = 60 / _songBPM * 1000;
+        _beatDurationSec = 60d / _songBPM;
+        _beatDurationMS = 60d / _songBPM * 1000d;
 
         _lastBeat = 0;
+        _halfBeatBeforeNextBeat = 0.5f;
         _nextBeat = 1;
+
+        _activeBeat = -1; //-1 if beat window closed
+        _activeBeatMargainSec = 0.100; //Margain becomes a + or -
     }
 
     private void OnEnable()
     {
-        MusicPlayer.OnSongPositionInSecondsChanged += CountBeatsRaw;
+        MusicPlayer.OnSongPositionInSecondsChanged += CountBeats;
     }
 
     private void OnDisable()
     {
-        MusicPlayer.OnSongPositionInSecondsChanged -= CountBeatsRaw;
+        MusicPlayer.OnSongPositionInSecondsChanged -= CountBeats;
     }
 
-    private void Update()
-    {
-        CountBeats();
-    }
-
-    private void CountBeatsRaw(double songPosInSeconds)
+    private void CountBeats(double songPosInSeconds)
     {
         //provides the current beat decimal (where 4.25 means a quarter into beat 4)
         //ex: (3 total seconds to divide / 0.34 seconds for a beat = 8.82 beats)
-        _currentBeatPos = songPosInSeconds / beatDurationSec;
-    }
+        _currentBeatPos = songPosInSeconds / _beatDurationSec;
 
-    private void CountBeats()
-    {
+        //used for couting beats
         if (_currentBeatPos >= _nextBeat)
         {
             _lastBeat++;
-
-            //emit or send event ("beat", lastbeat)
-            Debug.Log("Last beat: " + _lastBeat);
-
+            _halfBeatBeforeNextBeat++;
             _nextBeat++;
+
+            //***********************emit or send event ("beat", lastbeat)
+            Debug.Log("LAST BEAT: " + _lastBeat);
+        }
+
+        //used for giving beats a marginal property
+        _activeBeatStartPos = _nextBeat - _activeBeatMargainSec;
+        _activeBeatEndPos = _nextBeat + _activeBeatMargainSec;
+
+        if (_currentBeatPos >= _activeBeatStartPos && _currentBeatPos <= _activeBeatEndPos)
+        {
+            if (_firstEnterPossible)
+            {
+                _firstEnterPossible = false;
+                _firstExitPossible = true;
+                //**************************must emit enter beat X
+                Debug.Log("ENTER BEAT: " + _activeBeatStartPos);
+            }
+
+            Debug.Log("BEAT WINDOW: " + _activeBeatStartPos);
+        }
+        else if (_firstExitPossible)
+        {
+            _firstEnterPossible = true;
+            _firstExitPossible = false;
+            //**************************must emit exit beat X
+            Debug.Log("EXIT BEAT: " + _activeBeatStartPos);
+        }
+        else
+        {
+            //**************************must emit -1
         }
     }
 }
