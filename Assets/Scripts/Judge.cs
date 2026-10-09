@@ -1,32 +1,78 @@
-using Unity.VisualScripting;
+using System;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class Judge : MonoBehaviour
 {
-    //validates player's actions, whether thet are sucessful or failing (or more detailed with windows)
-    //then waits for an event from input and evaluates like so
+    //creates one evaluation per evaluatable beat window
+    //simply this: did you hit the note when it was possible to hit?
+    private string[,] _currentGoal;
+    private string _onlyButtonInput;
 
-    /*
-     * this is chronoligcally or just logically incorrect but the ideas are good
-     * 
-     * gets the next button and beat position from the composer called currentgoal
-     * if its wrong it "fails"
-     * 
-     * 
-     * if player input is wrong button it fails 
-     * else
-     * gets active beat from metronome to judge
-     * if it's on an active beat
-     * 
-     * if the window is open at a different beat the goal is failed
-     * 
-     * 
-     * must be button specifiec by the goal happening on the same beat
-     * 
-     * for misses( all types if you think about it), it checks for the window closed exit beat
-     *
-     *
-     *JUDGE ONLY REPLIES WITH SUCESS OR FAIL, teh referee does scoring
-     */
+    private bool _beatIsEval; //if the beat is evaluatable, or just "o" on the chart
+    private bool _windowIsOpen;
+    private bool _windowEvaluationCompleted;
+
+    public static event Action<bool> OnWasEvaluationSucessful;
+
+    private void Awake()
+    {
+        _beatIsEval = false;
+        _windowIsOpen = false;
+        _windowEvaluationCompleted = false;
+    }
+
+    private void OnEnable()
+    {
+        PlayerInput.OnKeyPressed += NewInput;
+        Metronome.OnWindowOpenedOrClosed += NewWindow;
+        Composer.OnNextTargetReady += NewGoal;
+    }
+
+    private void OnDisable()
+    {
+        PlayerInput.OnKeyPressed -= NewInput;
+        Metronome.OnWindowOpenedOrClosed -= NewWindow;
+        Composer.OnNextTargetReady -= NewGoal;
+    }
+
+    private void NewInput(string input)
+    {
+        _onlyButtonInput = input;
+
+        if (_windowIsOpen && !_windowEvaluationCompleted && _onlyButtonInput == _currentGoal[0,1] && _beatIsEval)
+        {
+            OnWasEvaluationSucessful?.Invoke(true);
+            _windowEvaluationCompleted = true;
+            Debug.Log("Hit!");
+        }
+    }
+
+    private void NewWindow(bool isOpen)
+    {
+        _windowIsOpen = isOpen;
+        
+        if (_windowIsOpen)
+        {
+            _windowEvaluationCompleted = false;
+        }
+        
+        if (!_windowIsOpen && !_windowEvaluationCompleted && _beatIsEval)
+        {
+            OnWasEvaluationSucessful?.Invoke(false);
+            Debug.Log("Miss!");
+        }
+    }
+
+    private void NewGoal(string[,] newGoal)
+    {
+        _currentGoal = newGoal;
+
+        if (_currentGoal[0,1] != "Cb-null")
+        {
+            _beatIsEval = true;
+        } else
+        {
+            _beatIsEval = false;
+        }
+    }
 }

@@ -1,12 +1,10 @@
 using System;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class Metronome : MonoBehaviour
 {
     //song info
-    [SerializeField]
-    private double _songBPM = 150d;
+    private double _songBPM = 100d;
 
     //song calculations
     private double _songAdjustedBPM;
@@ -25,13 +23,10 @@ public class Metronome : MonoBehaviour
     private bool _firstExitPossible;
     private bool _firstEnterPossible;
 
-    //things emmitted for other components
-    public static event Action<string> OnBeatEntry;
-    private string _onBeatEntryText;
-    public static event Action<string> OnBeatExit;
-    private string _onBeatExitText;
-    public static event Action<string> OnBeatUnavailable;
-    private string _onBeatUnavailableText;
+    public static event Action<int> OnLastBeat;
+    public static event Action<int> OnBeatEntry;
+    public static event Action<int> OnBeatExit;
+    public static event Action<bool> OnWindowOpenedOrClosed;
 
     private void Awake()
     {
@@ -39,10 +34,13 @@ public class Metronome : MonoBehaviour
         //if BPM is at or above 300bpm with an _activeBeatMargainSec of .200 (relation of * 1500), the game will break because the 
         //margain becomes longer than a beat itself. To avoid this, proper downscaling should be implimented
         _songAdjustedBPM = _songBPM;
+        _activeBeatMargainSec = 0.200; //Margain becomes a + or -
+
         while (_songAdjustedBPM >= _activeBeatMargainSec * 1500)
         {
             _songAdjustedBPM /= 2;
         }
+
         _beatDurationSec = 60d / _songAdjustedBPM;
 
         _lastBeat = 0;
@@ -50,11 +48,8 @@ public class Metronome : MonoBehaviour
         _nextBeat = 1;
 
         //the active beat window
-        _activeBeatMargainSec = 0.200; //Margain becomes a + or -
         _firstExitPossible = false;
         _firstEnterPossible = true;
-
-        _onBeatUnavailableText = "No beat";
     }
 
     private void OnEnable()
@@ -73,19 +68,19 @@ public class Metronome : MonoBehaviour
         //ex: (3 total seconds to divide / 0.34 seconds for a beat = 8.82 beats)
         _currentBeatPos = songPosInSeconds / _beatDurationSec;
 
-        //used for couting beats
-        //
+        //used for couting beats thenmselves
+        //the ticks on a timeline
         if (_currentBeatPos >= _nextBeat)
         {
             _lastBeat++;
+            OnLastBeat?.Invoke(_lastBeat);
+
             _halfBeat++;
             _nextBeat++;
-
-            //***********************emit or send event ("beat", lastbeat)
-            //Debug.Log("LAST BEAT: " + _lastBeat);
         }
 
         //used for giving beats a marginal property
+        //the defineable window based on the halfticks on the timeline
         _activeBeatStartPos = _halfBeat - _activeBeatMargainSec;
         _activeBeatEndPos = _halfBeat + _activeBeatMargainSec;
 
@@ -95,23 +90,18 @@ public class Metronome : MonoBehaviour
             _firstEnterPossible = false;
             _firstExitPossible = true;
 
-            _onBeatEntryText = "Enter beat " + _lastBeat;
-            OnBeatEntry?.Invoke(_onBeatEntryText);
-            Debug.Log(_onBeatEntryText);
+            OnBeatEntry?.Invoke(_lastBeat);
+
+            OnWindowOpenedOrClosed?.Invoke(true);
         }
         else if (_currentBeatPos < _activeBeatStartPos && _firstExitPossible || _currentBeatPos > _activeBeatEndPos && _firstExitPossible)
         {
             _firstEnterPossible = true;
             _firstExitPossible = false;
 
-            _onBeatExitText = "Exit beat " + _lastBeat;
-            OnBeatExit?.Invoke(_onBeatExitText);
-            Debug.Log(_onBeatExitText);
-        }
-        else
-        {
-            OnBeatUnavailable?.Invoke(_onBeatUnavailableText);
-            Debug.Log(_onBeatUnavailableText);
+            OnBeatExit?.Invoke(_lastBeat);
+
+            OnWindowOpenedOrClosed?.Invoke(false);
         }
     }
 }

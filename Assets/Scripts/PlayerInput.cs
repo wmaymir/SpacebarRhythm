@@ -6,9 +6,9 @@ public class PlayerInput : MonoBehaviour
 {
     //Unity's new input system has less latenency
     private InputSystem_Actions _inputActions;
-    private float _onlyInput;
+    //private float _onlyInput;
 
-    public static event Action OnSpacePressed;
+    public static event Action<string> OnKeyPressed;
 
     void Awake()
     {
@@ -33,8 +33,8 @@ public class PlayerInput : MonoBehaviour
     {
         if (context.performed)
         {
-            _onlyInput = context.ReadValue<float>();
-            OnSpacePressed?.Invoke();
+            //_onlyInput = context.ReadValue<float>();
+            OnKeyPressed?.Invoke("Cb-A"); //stands for combination A
         }
     }
 }

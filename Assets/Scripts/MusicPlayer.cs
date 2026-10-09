@@ -3,20 +3,11 @@ using UnityEngine;
 
 public class MusicPlayer : MonoBehaviour
 {
-    /*
-     * STRUCTURE FOR THE GAME:
-     * variables
-     * Initialization methods
-     * not initialization methods
-     * helper methods
-     * debugging / commented methods
-     */
-
     //scene info
     private AudioSource _songAudioSource;
 
     //pre-song
-    public bool songStarted { get; private set; }
+    private bool _songStarted;
 
     //begin-song
     private double _dspSongStartTime;
@@ -27,24 +18,23 @@ public class MusicPlayer : MonoBehaviour
     public static event Action<double> OnSongPositionInSecondsChanged;
 
     //end-song
-    //private bool _songOver = false;
+    private bool _songOver;
+    public static event Action OnSongOver;
 
     void Awake()
     {
-        songStarted = false;
         _songAudioSource = GetComponent<AudioSource>();
     }
 
     private void OnEnable()
     {
-        //add OnSpacePressed to the list of things to do
-        PlayerInput.OnSpacePressed += StartSong;
+        Referee.OnSongStart += StartSong;
+        Composer.OnChartOver += EndSong;
     }
 
     private void OnDisable()
     {
-        //remove it
-        PlayerInput.OnSpacePressed -= StartSong;
+        Referee.OnSongStart -= StartSong;
     }
 
     private void Update()
@@ -55,18 +45,15 @@ public class MusicPlayer : MonoBehaviour
 
     private void StartSong()
     {
-        if (!songStarted)
-        {
-            //start the song
-            _dspSongStartTime = AudioSettings.dspTime;
-            _songAudioSource.Play();
-            songStarted = true;
-        }
+        _dspSongStartTime = AudioSettings.dspTime;
+        _songAudioSource.Play();
+        _songStarted = true;
+        _songOver = false;
     }
 
     private void TimeSong()
     {
-        if (songStarted)
+        if (_songStarted && !_songOver)
         {
             //calculates the time elapsed on the audio thread
             elapsedSongTime = AudioSettings.dspTime - _dspSongStartTime;
@@ -75,6 +62,25 @@ public class MusicPlayer : MonoBehaviour
             songPositionInSeconds = elapsedSongTime;
 
             OnSongPositionInSecondsChanged?.Invoke(songPositionInSeconds);
+
+            if (_songAudioSource.isPlaying == false)
+            {
+                EndSong();
+            }
+        }
+    }
+
+    private void EndSong()
+    {
+        if (!_songOver)
+        {
+            _songOver = true;
+            OnSongOver?.Invoke();
+            Debug.Log("End Song");
+
+            //disable this object to save computing on the update method
+            //background music and FX should be on separate components
+            this.enabled = false;
         }
     }
 
