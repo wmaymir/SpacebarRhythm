@@ -6,7 +6,6 @@ public class PlayerInput : MonoBehaviour
 {
     //Unity's new input system has less latenency
     private InputSystem_Actions _inputActions;
-    //private float _onlyInput;
 
     public static event Action<string> OnKeyPressed;
 
@@ -33,7 +32,6 @@ public class PlayerInput : MonoBehaviour
     {
         if (context.performed)
         {
-            //_onlyInput = context.ReadValue<float>();
             OnKeyPressed?.Invoke("Cb-A"); //stands for combination A
         }
     }

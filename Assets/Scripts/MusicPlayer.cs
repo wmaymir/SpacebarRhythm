@@ -7,6 +7,7 @@ public class MusicPlayer : MonoBehaviour
     private AudioSource _songAudioSource;
 
     //pre-song
+    private double _globalOffsetMS = -200; // - for if the beats come too early, + for if they come too late
     private bool _songStarted;
 
     //begin-song
@@ -58,8 +59,8 @@ public class MusicPlayer : MonoBehaviour
             //calculates the time elapsed on the audio thread
             elapsedSongTime = AudioSettings.dspTime - _dspSongStartTime;
 
-            //will change with more offset options
-            songPositionInSeconds = elapsedSongTime;
+            //apply offsets
+            songPositionInSeconds = elapsedSongTime + (_globalOffsetMS / 1000);
 
             OnSongPositionInSecondsChanged?.Invoke(songPositionInSeconds);
 
@@ -86,9 +87,6 @@ public class MusicPlayer : MonoBehaviour
 
     private void debugdspTime()
     {
-        //you can't directly reset AudioSettings.dspTime
-        //it's managed internally and only resets when the application restarts/reloads
-        //this is why an offset is necessary
         Debug.Log(AudioSettings.dspTime);
     }
 }

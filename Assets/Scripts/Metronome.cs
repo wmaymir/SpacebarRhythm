@@ -5,27 +5,21 @@ public class Metronome : MonoBehaviour
 {
     //song info
     private double _songBPM = 100d;
-
-    //song calculations
     private double _songAdjustedBPM;
 
     private double _beatDurationSec; //seconds per quarter beat, or quarter beat duration in seconds
 
     private double _currentBeatPos;
-    private int _nextBeat; //NOT nextBeatPos
-    private int _lastBeat; //NOT lastBeatPos, it means the number lastBeat
-    private float _halfBeat; //simply returns 0.5 (lastbeat + 0.5) so that the window is not based off of nextbeat, which changes as soon as it is reached
+    private int _nextBeat;
+    private int _lastBeat;
+    public static event Action<int> OnLastBeat;
 
     //creates the widest window that opens and closes on the active beat
     private double _activeBeatMargainSec;
-    private double _activeBeatStartPos;
-    private double _activeBeatEndPos;
+    private double _activeBeatPosA;
+    private double _activeBeatPosB;
     private bool _firstExitPossible;
     private bool _firstEnterPossible;
-
-    public static event Action<int> OnLastBeat;
-    public static event Action<int> OnBeatEntry;
-    public static event Action<int> OnBeatExit;
     public static event Action<bool> OnWindowOpenedOrClosed;
 
     private void Awake()
@@ -44,7 +38,6 @@ public class Metronome : MonoBehaviour
         _beatDurationSec = 60d / _songAdjustedBPM;
 
         _lastBeat = 0;
-        _halfBeat = 0.5f;
         _nextBeat = 1;
 
         //the active beat window
@@ -68,39 +61,37 @@ public class Metronome : MonoBehaviour
         //ex: (3 total seconds to divide / 0.34 seconds for a beat = 8.82 beats)
         _currentBeatPos = songPosInSeconds / _beatDurationSec;
 
-        //used for couting beats thenmselves
+        //used for couting beats themselves
         //the ticks on a timeline
         if (_currentBeatPos >= _nextBeat)
         {
             _lastBeat++;
             OnLastBeat?.Invoke(_lastBeat);
 
-            _halfBeat++;
             _nextBeat++;
         }
 
         //used for giving beats a marginal property
-        //the defineable window based on the halfticks on the timeline
-        _activeBeatStartPos = _halfBeat - _activeBeatMargainSec;
-        _activeBeatEndPos = _halfBeat + _activeBeatMargainSec;
+        //the defineable window based on the the ticks of the timeline
+        //correctly rides the active area when the beats are redefined (works with beats switching rather than using half beats)
+        _activeBeatPosA = _lastBeat + _activeBeatMargainSec; //active beat "end"'s inner rim on the timeline
+        _activeBeatPosB = _nextBeat - _activeBeatMargainSec; //active beat "start"'s outer rim on the timeline
 
         //beat windows opening and closing
-        if (_currentBeatPos >= _activeBeatStartPos && _currentBeatPos <= _activeBeatEndPos && _firstEnterPossible)
+        if (_currentBeatPos <= _nextBeat && _currentBeatPos >= _activeBeatPosB && _firstEnterPossible)
         {
             _firstEnterPossible = false;
             _firstExitPossible = true;
 
-            OnBeatEntry?.Invoke(_lastBeat);
-
+            //Debug.Log("Window open");
             OnWindowOpenedOrClosed?.Invoke(true);
         }
-        else if (_currentBeatPos < _activeBeatStartPos && _firstExitPossible || _currentBeatPos > _activeBeatEndPos && _firstExitPossible)
+        else if (_currentBeatPos > _activeBeatPosA && _currentBeatPos < _activeBeatPosB && _firstExitPossible)
         {
             _firstEnterPossible = true;
             _firstExitPossible = false;
 
-            OnBeatExit?.Invoke(_lastBeat);
-
+            //Debug.Log("Window close");
             OnWindowOpenedOrClosed?.Invoke(false);
         }
     }

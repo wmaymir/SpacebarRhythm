@@ -3,11 +3,6 @@ using UnityEngine;
 
 public class Referee : MonoBehaviour
 {
-    //essentially is the auctual game manager
-    //remember, all scripts should be components that communicate via events,
-    //update method should be used minimally and components should be able to shut off
-    //after they don't need it anymore, like MusicPlayer
-
     //FUTURE STUFF IT SHOULD DO
     //loading songs, defining bpm, giving level data to composer
     //healthbar, combo scoring, broadcasting stuff for UI, ending level in cases of fail-outs, etc
@@ -15,10 +10,12 @@ public class Referee : MonoBehaviour
     private bool songStarted;
     public static event Action OnSongStart;
 
-    private int hitOpportunities;
-    private int notesHit;
+    private double hitOpportunities;
+    private double notesHit;
+    public static event Action<string> OnScored;
 
-    private float endScore;
+    private double endScore;
+    public static event Action<double> OnSongScored;
 
     private void Awake()
     {
@@ -28,13 +25,15 @@ public class Referee : MonoBehaviour
     private void OnEnable()
     {
         PlayerInput.OnKeyPressed += StartSong;
-        Judge.OnWasEvaluationSucessful += TallyScore;
+        Judge.OnWasEvaluationSucessful += CalculateScore;
+        MusicPlayer.OnSongOver += CalculateFinalScore;
     }
 
     private void OnDisable()
     {
         PlayerInput.OnKeyPressed -= StartSong;
-        Judge.OnWasEvaluationSucessful -= TallyScore;
+        Judge.OnWasEvaluationSucessful -= CalculateScore;
+        MusicPlayer.OnSongOver -= CalculateFinalScore;
     }
 
     private void StartSong(string keyPressed)
@@ -44,27 +43,28 @@ public class Referee : MonoBehaviour
             Debug.Log("Start Song");
             OnSongStart?.Invoke();
             songStarted = true;
-            //no need for end song yet, since music player has song over event
-            //which sucessfully stops everything. Might be useful down the line
         }
     }
 
     //FUTURE: add logic for note timing windows here, not in Judge
-    private void TallyScore(bool addOne)
+    private void CalculateScore(bool addOne)
     {
         if(addOne == true)
         {
             notesHit++;
             hitOpportunities++;
+            OnScored?.Invoke("Okay!");
         }
         else
         {
             hitOpportunities++;
+            OnScored?.Invoke("Miss!");
         }
     }
 
-    private void CalculateTotals()
+    private void CalculateFinalScore()
     {
-        //when the end of song event is broadcasted, calculate and debug the total
+        endScore = notesHit / hitOpportunities;
+        OnSongScored?.Invoke(endScore);
     }
 }

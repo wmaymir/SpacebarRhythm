@@ -3,12 +3,12 @@ using UnityEngine;
 
 public class Judge : MonoBehaviour
 {
-    //creates one evaluation per evaluatable beat window
-    //simply this: did you hit the note when it was possible to hit?
+    //creates one evaluation per evaluable beat window
+    //simply this: did you hit the note when it was possible to be hit?
     private string[,] _currentGoal;
     private string _onlyButtonInput;
 
-    private bool _beatIsEval; //if the beat is evaluatable, or just "o" on the chart
+    private bool _beatIsEval; //if the beat is evaluable, just "o" on the chart
     private bool _windowIsOpen;
     private bool _windowEvaluationCompleted;
 
@@ -43,7 +43,7 @@ public class Judge : MonoBehaviour
         {
             OnWasEvaluationSucessful?.Invoke(true);
             _windowEvaluationCompleted = true;
-            Debug.Log("Hit!");
+            //Debug.Log("Hit!");
         }
     }
 
@@ -59,7 +59,7 @@ public class Judge : MonoBehaviour
         if (!_windowIsOpen && !_windowEvaluationCompleted && _beatIsEval)
         {
             OnWasEvaluationSucessful?.Invoke(false);
-            Debug.Log("Miss!");
+            //Debug.Log("Miss!");
         }
     }
 
