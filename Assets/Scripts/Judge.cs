@@ -43,7 +43,7 @@ public class Judge : MonoBehaviour
         {
             OnWasEvaluationSucessful?.Invoke(true);
             _windowEvaluationCompleted = true;
-            Debug.Log("Hit!");
+            //Debug.Log("Hit!");
         }
     }
 
@@ -59,7 +59,7 @@ public class Judge : MonoBehaviour
         if (!_windowIsOpen && !_windowEvaluationCompleted && _beatIsEval)
         {
             OnWasEvaluationSucessful?.Invoke(false);
-            Debug.Log("Miss!");
+            //Debug.Log("Miss!");
         }
     }
 
