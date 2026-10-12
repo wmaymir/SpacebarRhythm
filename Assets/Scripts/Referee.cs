@@ -40,7 +40,7 @@ public class Referee : MonoBehaviour
     {
         if(keyPressed == "Cb-A" && !songStarted)
         {
-            Debug.Log("Start Song");
+            //Debug.Log("Start Song");
             OnSongStart?.Invoke();
             songStarted = true;
         }

@@ -21,6 +21,7 @@ public class Metronome : MonoBehaviour
     private bool _firstExitPossible;
     private bool _firstEnterPossible;
     public static event Action<bool> OnWindowOpenedOrClosed;
+    public static event Action<int> OnNewWindow;
 
     private void Awake()
     {
@@ -28,7 +29,7 @@ public class Metronome : MonoBehaviour
         //if BPM is at or above 300bpm with an _activeBeatMargainSec of .200 (relation of * 1500), the game will break because the 
         //margain becomes longer than a beat itself. To avoid this, proper downscaling should be implimented
         _songAdjustedBPM = _songBPM;
-        _activeBeatMargainSec = 0.200; //Margain becomes a + or -
+        _activeBeatMargainSec = 0.250; //Margain becomes a + or -
 
         while (_songAdjustedBPM >= _activeBeatMargainSec * 1500)
         {
@@ -37,8 +38,12 @@ public class Metronome : MonoBehaviour
 
         _beatDurationSec = 60d / _songAdjustedBPM;
 
-        _lastBeat = 0;
-        _nextBeat = 1;
+        //so that the first "last beat" starts at 0, the beginning
+        //lets the first charted note be the 4th beat of the song due to the nature
+        //of the composer sending out note spawns 4 beats ahead
+        //anything more than this will break stuff
+        _lastBeat = -1;
+        _nextBeat = 0;
 
         //the active beat window
         _firstExitPossible = false;
@@ -84,6 +89,7 @@ public class Metronome : MonoBehaviour
             _firstExitPossible = true;
 
             //Debug.Log("Window open");
+            OnNewWindow?.Invoke(_nextBeat);
             OnWindowOpenedOrClosed?.Invoke(true);
         }
         else if (_currentBeatPos > _activeBeatPosA && _currentBeatPos < _activeBeatPosB && _firstExitPossible)

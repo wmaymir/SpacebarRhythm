@@ -7,20 +7,22 @@ public class DisplayChart : MonoBehaviour
     Vector3 spawnPosition;
     Quaternion spawnRotation;
 
+    int visualOffset = 0;
+
     private void Awake()
     {
-        spawnPosition = new Vector3(60, 0, 0);
+        spawnPosition = new Vector3(60 + visualOffset, 0, 0);
         spawnRotation = Quaternion.Euler(0, 90, 90);
     }
 
     private void OnEnable()
     {
-        //Composer.OnNoteSpawnInfoReady += SpawnNote;
+        Composer.OnNoteSpawnInfoReady += SpawnNote;
     }
 
     private void OnDisable()
     {
-        //Composer.OnNoteSpawnInfoReady -= SpawnNote;
+        Composer.OnNoteSpawnInfoReady -= SpawnNote;
     }
 
     private void SpawnNote(string[,] noteInfo)

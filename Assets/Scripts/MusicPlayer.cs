@@ -7,7 +7,7 @@ public class MusicPlayer : MonoBehaviour
     private AudioSource _songAudioSource;
 
     //pre-song
-    private double _globalOffsetMS = -200; // - for if the beats come too early, + for if they come too late
+    private double _globalOffsetMS = -300d; // - for if the beats come too early, + for if they come too late
     private bool _songStarted;
 
     //begin-song
@@ -77,7 +77,7 @@ public class MusicPlayer : MonoBehaviour
         {
             _songOver = true;
             OnSongOver?.Invoke();
-            Debug.Log("End Song");
+            //Debug.Log("End Song");
 
             //disable this object to save computing on the update method
             //background music and FX should be on separate components
