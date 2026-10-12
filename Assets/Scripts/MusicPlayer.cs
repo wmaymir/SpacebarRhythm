@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 
 public class MusicPlayer : MonoBehaviour
@@ -7,7 +8,8 @@ public class MusicPlayer : MonoBehaviour
     private AudioSource _songAudioSource;
 
     //pre-song
-    private double _globalOffsetMS = -300d; // - for if the beats come too early, + for if they come too late
+    private double _globalOffsetMS = -315d; // - for if the beats come too early, + for if they come too late
+    //-315 default for IIO, -300 for unity testing
     private bool _songStarted;
 
     //begin-song
@@ -30,12 +32,15 @@ public class MusicPlayer : MonoBehaviour
     private void OnEnable()
     {
         Referee.OnSongStart += StartSong;
+        Settings.OnGlobalOffsetUpdated += UpdateOffset;
         Composer.OnChartOver += EndSong;
     }
 
     private void OnDisable()
     {
         Referee.OnSongStart -= StartSong;
+        Settings.OnGlobalOffsetUpdated -= UpdateOffset;
+        Composer.OnChartOver -= EndSong;
     }
 
     private void Update()
@@ -50,6 +55,11 @@ public class MusicPlayer : MonoBehaviour
         _songAudioSource.Play();
         _songStarted = true;
         _songOver = false;
+    }
+
+    private void UpdateOffset(double newOffset)
+    {
+        _globalOffsetMS = newOffset;
     }
 
     private void TimeSong()
