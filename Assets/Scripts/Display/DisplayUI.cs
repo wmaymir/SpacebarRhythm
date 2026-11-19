@@ -6,15 +6,21 @@ public class DisplayUI : MonoBehaviour
 {
 
     public TextMeshProUGUI JudgementTextElement;
+    public TextMeshProUGUI MoneyTextElement;
+    public TextMeshProUGUI EXTextElement;
 
     public void OnEnable()
     {
-        Referee.OnScored += DisplayJudgement;
+        Judge.OnEvaluation += DisplayJudgement;
+        Referee.OnMoneyScored += DisplayMoneyScore;
+        Referee.OnEXScored += DisplayEXScore;
     }
 
     public void OnDisable()
     {
-        Referee.OnScored -= DisplayJudgement;
+        Judge.OnEvaluation -= DisplayJudgement;
+        Referee.OnMoneyScored -= DisplayMoneyScore;
+        Referee.OnEXScored -= DisplayEXScore;
     }
 
     public void OnPlayClicked()
@@ -27,10 +33,22 @@ public class DisplayUI : MonoBehaviour
         SceneManager.LoadSceneAsync("Title");
     }
 
-    //FUTURE: make the ratings pop, have colors, go away, etc
+    // Future: make the ratings pop, have colors, go away, etc
     private void DisplayJudgement(string judgement)
     {
         JudgementTextElement.text = judgement;
+    }
+
+    private void DisplayMoneyScore(string scoreString)
+    {
+        MoneyTextElement.text = scoreString;
+        MoneyTextElement.gameObject.SetActive(true);
+    }
+
+    private void DisplayEXScore(string scoreString)
+    {
+        EXTextElement.text = scoreString;
+        EXTextElement.gameObject.SetActive(true);
     }
 
 }

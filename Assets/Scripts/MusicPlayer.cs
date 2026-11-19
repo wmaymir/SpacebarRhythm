@@ -1,26 +1,31 @@
 using System;
-using TMPro;
 using UnityEngine;
 
 public class MusicPlayer : MonoBehaviour
 {
-    //scene info
+    // Scene info
+
     private AudioSource _songAudioSource;
 
-    //pre-song
-    private double _globalOffsetMS = -315d; // - for if the beats come too early, + for if they come too late
-    //-315 default for IIO, -300 for unity testing
+    // Pre-song
+
+    // - for if the beats come too early, + for if they come too late
+    // -315 is a fair default for Itch IO, -300 is better for editor testing
+    private double _globalOffsetMS = -315d;
     private bool _songStarted;
 
-    //begin-song
+    // Begin-song
+
     private double _dspSongStartTime;
 
-    //mid-song
-    double elapsedSongTime;
-    double songPositionInSeconds;
+    // Mid-song
+
+    private double _elapsedSongTime;
+    private double _songPositionInSeconds;
     public static event Action<double> OnSongPositionInSecondsChanged;
 
-    //end-song
+    // End-song
+
     private bool _songOver;
     public static event Action OnSongOver;
 
@@ -45,8 +50,8 @@ public class MusicPlayer : MonoBehaviour
 
     private void Update()
     {
-        //debugdspTime()
         TimeSong();
+        //DebugDSPTime()
     }
 
     private void StartSong()
@@ -66,13 +71,13 @@ public class MusicPlayer : MonoBehaviour
     {
         if (_songStarted && !_songOver)
         {
-            //calculates the time elapsed on the audio thread
-            elapsedSongTime = AudioSettings.dspTime - _dspSongStartTime;
+            // Calculates the time elapsed on the audio thread
+            _elapsedSongTime = AudioSettings.dspTime - _dspSongStartTime;
 
-            //apply offsets
-            songPositionInSeconds = elapsedSongTime + (_globalOffsetMS / 1000);
+            // Applies offsets
+            _songPositionInSeconds = _elapsedSongTime + (_globalOffsetMS / 1000);
 
-            OnSongPositionInSecondsChanged?.Invoke(songPositionInSeconds);
+            OnSongPositionInSecondsChanged?.Invoke(_songPositionInSeconds);
 
             if (_songAudioSource.isPlaying == false)
             {
@@ -89,13 +94,13 @@ public class MusicPlayer : MonoBehaviour
             OnSongOver?.Invoke();
             //Debug.Log("End Song");
 
-            //disable this object to save computing on the update method
-            //background music and FX should be on separate components
+            // Disables this object to save computing on the update method
+            // Background music and FX should be on separate components
             this.enabled = false;
         }
     }
 
-    private void debugdspTime()
+    private void DebugDSPTime()
     {
         Debug.Log(AudioSettings.dspTime);
     }

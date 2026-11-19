@@ -4,12 +4,13 @@ using UnityEngine.InputSystem;
 
 public class PlayerInput : MonoBehaviour
 {
-    //Unity's new input system has less latenency
+    // Unity's new input system has less latenency
+
     private InputSystem_Actions _inputActions;
 
     public static event Action<string> OnKeyPressed;
 
-    void Awake()
+    private void Awake()
     {
         _inputActions = new InputSystem_Actions();
     }
@@ -17,13 +18,14 @@ public class PlayerInput : MonoBehaviour
     private void OnEnable()
     {
         _inputActions.Player.OnlyChoice.performed += OnOnlyPressOption;
-        //necessary because the Input System keeps action maps disabled by default to not waste resources
+
+        // Necessary because the Input System keeps action maps disabled by default to not waste resources
         _inputActions.Player.Enable();
     }
 
     private void OnDisable()
     {
-        //unsubscribing prevents memory leaks
+        // Unsubscribing prevents potential memory leaks
         _inputActions.Player.OnlyChoice.performed -= OnOnlyPressOption;
         _inputActions.Player.Disable();
     }
@@ -32,7 +34,8 @@ public class PlayerInput : MonoBehaviour
     {
         if (context.performed)
         {
-            OnKeyPressed?.Invoke("Cb-A"); //stands for combination A
+            // "Cb-A" stands for combination A
+            OnKeyPressed?.Invoke("Cb-A");
         }
     }
 }

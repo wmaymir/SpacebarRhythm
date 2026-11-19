@@ -5,8 +5,7 @@ using UnityEngine;
 public class Settings : MonoBehaviour
 {
     private string _userOffsetInput;
-    [SerializeField]
-    private TMP_InputField offsetInputField;
+    [SerializeField] private TMP_InputField offsetInputField;
     public static event Action<double> OnGlobalOffsetUpdated;
 
     public void OnApplyUserOffset()
@@ -19,7 +18,8 @@ public class Settings : MonoBehaviour
         }
         catch
         {
-            //Debug.Log("Failed to parse entered offset to double");
+            // LogWarning gives it the fancy triangle icon
+            Debug.LogWarning("Failed to parse entered offset to double");
         }
 
     }

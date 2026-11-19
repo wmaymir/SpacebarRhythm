@@ -3,68 +3,95 @@ using UnityEngine;
 
 public class Referee : MonoBehaviour
 {
-    //FUTURE STUFF IT SHOULD DO
-    //loading songs, defining bpm, giving level data to composer
-    //healthbar, combo scoring, broadcasting stuff for UI, ending level in cases of fail-outs, etc
+    // Although not yet implimented, the Referee's job is also this:
+    // loading songs, defining bpm, giving level data to the composer
+    // healthbar, combo scoring, broadcasting stuff for UI, ending level in cases of fail-outs, etc
 
-    private bool songStarted;
+    private bool _songStarted;
     public static event Action OnSongStart;
 
-    private double hitOpportunities;
-    private double notesHit;
-    public static event Action<string> OnScored;
+    private float _moneyScorePossiblePerNote;
+    private float _moneyScore;
+    public static event Action<string> OnMoneyScored;
 
-    private double endScore;
-    public static event Action<double> OnSongScored;
+    private int _exScore;
+    private int _maxEXScore;
+    public static event Action<string> OnEXScored;
 
     private void Awake()
     {
-        songStarted = false;
+        _songStarted = false;
     }
 
     private void OnEnable()
     {
         PlayerInput.OnKeyPressed += StartSong;
-        Judge.OnWasEvaluationSucessful += CalculateScore;
+        Judge.OnEvaluation += CalculateScore;
         MusicPlayer.OnSongOver += CalculateFinalScore;
+        Composer.OnNoteCountFinished += SetPossibleScorePerNote;
     }
 
     private void OnDisable()
     {
         PlayerInput.OnKeyPressed -= StartSong;
-        Judge.OnWasEvaluationSucessful -= CalculateScore;
+        Judge.OnEvaluation -= CalculateScore;
         MusicPlayer.OnSongOver -= CalculateFinalScore;
+        Composer.OnNoteCountFinished -= SetPossibleScorePerNote;
     }
 
     private void StartSong(string keyPressed)
     {
-        if(keyPressed == "Cb-A" && !songStarted)
+        if(keyPressed == "Cb-A" && !_songStarted)
         {
             //Debug.Log("Start Song");
             OnSongStart?.Invoke();
-            songStarted = true;
+            _songStarted = true;
         }
     }
 
-    //FUTURE: add logic for note timing windows here, not in Judge
-    private void CalculateScore(bool addOne)
+    // Scoring Stuff
+
+    private void SetPossibleScorePerNote(int total)
     {
-        if(addOne == true)
+        _moneyScorePossiblePerNote = 1000000 / total;
+        _maxEXScore = total * 4;
+    }
+
+    private void CalculateScore(string judgement)
+    {
+        if (judgement == "Okay")
         {
-            notesHit++;
-            hitOpportunities++;
-            OnScored?.Invoke("Okay!");
+
+            _moneyScore += _moneyScorePossiblePerNote * 0.5f;
+            _exScore += 1;
+
         }
-        else
+        else if (judgement == "Great")
         {
-            hitOpportunities++;
-            OnScored?.Invoke("Miss!");
+
+            _moneyScore += _moneyScorePossiblePerNote * 0.8f;
+            _exScore += 2;
+
+        }
+        else if (judgement == "Perfect")
+        {
+
+            _moneyScore += _moneyScorePossiblePerNote;
+            _exScore += 3;
+
+        }
+        else if (judgement == "Perfect+")
+        {
+            
+            _moneyScore += _moneyScorePossiblePerNote;
+            _exScore += 4;
+
         }
     }
 
     private void CalculateFinalScore()
     {
-        endScore = notesHit / hitOpportunities;
-        OnSongScored?.Invoke(endScore);
+        OnEXScored?.Invoke("EX Score: " + _exScore + " out of " + _maxEXScore);
+        OnMoneyScored?.Invoke("Money Score: " + _moneyScore + " out of 1000000");
     }
 }

@@ -3,15 +3,15 @@ using UnityEngine;
 public class DisplayChart : MonoBehaviour
 {
 
-    public GameObject note;
+    [SerializeField] private GameObject _note;
     Vector3 spawnPosition;
     Quaternion spawnRotation;
 
-    int visualOffset = 0;
+    private int _visualOffset = 0;
 
     private void Awake()
     {
-        spawnPosition = new Vector3(60 + visualOffset, 0, 0);
+        spawnPosition = new Vector3(60 + _visualOffset, 0, 0);
         spawnRotation = Quaternion.Euler(0, 90, 90);
     }
 
@@ -29,7 +29,7 @@ public class DisplayChart : MonoBehaviour
     {
         if (noteInfo[0, 1] == "Cb-A")
         {
-            Instantiate(note, spawnPosition, spawnRotation);
+            Instantiate(_note, spawnPosition, spawnRotation);
         }
     }
 }
